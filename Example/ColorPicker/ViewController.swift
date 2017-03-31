@@ -6,19 +6,34 @@
 //  Copyright (c) 2017 Tom Knapen. All rights reserved.
 //
 
+import ColorPicker
 import UIKit
 
 class ViewController: UIViewController {
 
+	let colorPicker = ColorPicker()
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+
+		colorPicker.translatesAutoresizingMaskIntoConstraints = true
+		colorPicker.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+		colorPicker.frame = view.bounds
+		view.addSubview(colorPicker)
+
+		colorPicker.delegate = self
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
+	func colorChanged(_ sender: ColorPicker) {
+		view.backgroundColor = sender.color
+	}
 
 }
 
+extension ViewController: ColorPickerDelegate {
+
+	func colorPicker(_ colorPicker: ColorPicker, didFinishPickingWithColor color: UIColor) {
+		view.backgroundColor = color
+	}
+
+}
