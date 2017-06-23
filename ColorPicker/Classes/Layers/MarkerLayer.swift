@@ -17,11 +17,11 @@ class MarkerLayer: CALayer {
 
 	override func draw(in ctx: CGContext) {
 		super.draw(in: ctx)
-		
+
 		ctx.setLineWidth(thickness)
 		ctx.setStrokeColor(color.cgColor)
 		ctx.addEllipse(in: bounds.insetBy(dx: thickness, dy: thickness))
 		ctx.strokePath()
 	}
-
+	
 }

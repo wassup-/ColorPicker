@@ -13,7 +13,7 @@ class HueCircleLayer: CALayer {
 
 	let thicknessRatio: CGFloat = 0.2
 
-	var slices: UInt = 0 {
+	var slices: UInt = 32 {
 		didSet { setNeedsDisplay() }
 	}
 
@@ -29,7 +29,7 @@ class HueCircleLayer: CALayer {
 		let thickness: CGFloat = radius * thicknessRatio
 		let innerRadius: CGFloat = radius - thickness
 
-		let sliceAngle: CGFloat = CGFloat(2 * M_PI) / CGFloat(slices)
+		let sliceAngle: CGFloat = CGFloat(2 * Double.pi) / CGFloat(slices)
 		let sliceAngle_2: CGFloat = sliceAngle / 2.0
 
 		let path = CGMutablePath()
@@ -61,5 +61,5 @@ class HueCircleLayer: CALayer {
 			ctx.rotate(by: -sliceAngle)
 		}
 	}
-
+	
 }

@@ -17,46 +17,62 @@ open class ColorPicker: UIControl, UIGestureRecognizerDelegate {
 
 	// MARK: Private properties
 
+	/// The layer representing the hue circle
 	internal let layerHueCircle: HueCircleLayer = HueCircleLayer()
-	internal let layerSaturationBrightnessBox: SaturationBrightnessLayer = SaturationBrightnessLayer()
+	/// The layer representing the hue marker
 	internal let layerHueMarker: MarkerLayer = MarkerLayer()
+	/// The layer representing the saturation/brightness box
+	internal let layerSaturationBrightnessBox: SaturationBrightnessLayer = SaturationBrightnessLayer()
+	/// The layer representing the saturation/brightness marker
 	internal let layerSaturationBrightnessMarker: MarkerLayer = MarkerLayer()
 
+	/// The *hue* component of the currently selected color
 	internal var _hue: CGFloat {
 		get { return layerSaturationBrightnessBox.hue }
 		set { layerSaturationBrightnessBox.hue = newValue }
 	}
 
+	/// The *saturation* component of the currently selected color
 	internal var _saturation: CGFloat = 0
+	/// The *brightness* component of the currently selected color
 	internal var _brightness: CGFloat = 0
+	/// The *alpha* component of the currently selected color
 	internal var _alpha: CGFloat = 1
 
+	/// The radius of the hue wheel
 	internal var _radius: CGFloat = 0
+	/// The size of the saturation/brightness box
 	internal var _boxSize: CGFloat {
 		let kBoxThickness: CGFloat = 0.7
 		return sqrt(kBoxThickness * kBoxThickness * _radius * _radius / 2.0) * 2.0
 	}
+	/// The center of our view
 	internal var _center: CGPoint {
 		return CGPoint(x: bounds.midX, y: bounds.midY)
 	}
-
+	/// The thickness of the marker's border
 	internal var _thickness: CGFloat {
 		let kCircleThickness: CGFloat = 0.2
 		return kCircleThickness * _radius
 	}
 
+	/// The hue gesture recognizer
 	internal var hueGestureRecognizer: UILongPressGestureRecognizer!
+	/// The saturation/brightness gesture recognizer
 	internal var saturationBrightnessGestureRecognizer: UILongPressGestureRecognizer!
 
 	// MARK: Public properties
 
+	/// The delegate object
 	open weak var delegate: ColorPickerDelegate? = nil
 
+	/// Number of slices used to represent the color wheel
 	open var slices: UInt {
 		get { return layerHueCircle.slices }
 		set { layerHueCircle.slices = newValue }
 	}
 
+	/// The currently selected color
 	open var color: UIColor {
 		get { return UIColor(hue: _hue, saturation: _saturation, brightness: _brightness, alpha: _alpha) }
 		set {
@@ -145,13 +161,15 @@ open class ColorPicker: UIControl, UIGestureRecognizerDelegate {
 // MARK: Helper functions
 extension ColorPicker {
 
+	/// Send actions and notify delegate related to color changes
 	fileprivate func notifyColorChanged() {
 		sendActions(for: .valueChanged)
 		delegate?.colorPicker(self, didFinishPickingWithColor: color)
-
-		print("H: \(_hue), S: \(_saturation), B: \(_brightness), A: \(_alpha), slices: \(slices)")
 	}
 
+	/// Creates and returns a long press gesture recognizer with `self` as it's target
+	/// - parameter action: The selector to send when a gesture is recognized
+	/// - returns: A long press gesture recognizer that sends `action` to `self` upon recognition
 	fileprivate func createLongPressGestureRecognizer(action: Selector) -> UILongPressGestureRecognizer {
 		let recognizer = UILongPressGestureRecognizer(target: self, action: action)
 		recognizer.minimumPressDuration = 0
@@ -160,6 +178,10 @@ extension ColorPicker {
 		return recognizer
 	}
 
+	/// Adds `sublayer` as a sublayer to `layer`, optionally setting it's frame to fill `layer`'s bounds
+	/// - parameter sublayer: The layer to add as a sublayer to `layer`
+	/// - parameter layer: The layer to add `sublayer` to
+	/// - parameter fill: Whether or not to modify `sublayer`s frame to fill `layer`s bounds
 	fileprivate func addSublayer(_ sublayer: CALayer, to layer: CALayer, fill: Bool) {
 		if fill {
 			sublayer.frame = bounds
@@ -184,18 +206,21 @@ extension ColorPicker {
 	}
 
 	fileprivate func hueMarkerFrame() -> CGRect {
-		let radians: CGFloat = CGFloat(2 * M_PI) * _hue
-		let position = CGPoint(x: cos(radians) * (_radius  - _thickness / 2.0),
-		                       y: -sin(radians) * (_radius - _thickness / 2.0))
-		return CGRect(x: (position.x - _thickness / 2.0) + (bounds.width / 2.0),
-		              y: (position.y - _thickness / 2.0) + (bounds.height / 2.0),
+		let radians: CGFloat = CGFloat(2 * Double.pi) * _hue
+		let halfThickness: CGFloat = _thickness / 2.0
+		let position = CGPoint(x: cos(radians) * (_radius  - halfThickness),
+		                       y: -sin(radians) * (_radius - halfThickness))
+		return CGRect(x: (position.x - halfThickness) + (bounds.width / 2.0),
+		              y: (position.y - halfThickness) + (bounds.height / 2.0),
 		              width: _thickness,
 		              height: _thickness)
 	}
 
 	fileprivate func saturationBrightnessMarkerFrame() -> CGRect {
-		return CGRect(x: (_saturation * _boxSize) - (_boxSize / 2.0) - (_thickness / 2.0) + (bounds.width / 2.0),
-		              y: ((1.0 - _brightness) * _boxSize) - (_boxSize / 2.0) - (_thickness / 2.0) + (bounds.height / 2.0),
+		let halfThickness: CGFloat = _thickness / 2.0
+		let halfSize: CGFloat = _boxSize / 2.0
+		return CGRect(x: (_saturation * _boxSize) - halfSize - halfThickness + (bounds.width / 2.0),
+		              y: ((1.0 - _brightness) * _boxSize) - halfSize - halfThickness + (bounds.height / 2.0),
 		              width: _thickness,
 		              height: _thickness)
 	}
@@ -219,14 +244,14 @@ extension ColorPicker {
 
 			let radians = atan2(_center.y - position.y, position.x - _center.x)
 
-			var hue = radians / CGFloat(2 * M_PI)
+			var hue = radians / CGFloat(2 * Double.pi)
 			if hue < 0 {
 				hue += 1
 			}
 			_hue = hue
 
 			CATransaction.begin()
-			CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
+			CATransaction.setDisableActions(true)
 			updateMarkerPositions()
 			CATransaction.commit()
 
@@ -244,10 +269,10 @@ extension ColorPicker {
 			_brightness = max(0, min(1, (_center.y - position.y) / _boxSize + 0.5))
 
 			CATransaction.begin()
-			CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
+			CATransaction.setDisableActions(true)
 			updateMarkerPositions()
 			CATransaction.commit()
-
+			
 			notifyColorChanged()
 		default:
 			break
