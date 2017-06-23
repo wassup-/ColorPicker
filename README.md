@@ -1,6 +1,6 @@
 # ColorPicker
 
-[![CI Status](http://img.shields.io/travis/Tom Knapen/ColorPicker.svg?style=flat)](https://travis-ci.org/wassup-/ColorPicker)
+[![CI Status](https://img.shields.io/travis/wassup-/ColorPicker.svg?style=flat)](https://travis-ci.org/wassup-/ColorPicker)
 [![Version](https://img.shields.io/cocoapods/v/ColorPicker.svg?style=flat)](http://cocoapods.org/pods/ColorPicker)
 [![License](https://img.shields.io/cocoapods/l/ColorPicker.svg?style=flat)](http://cocoapods.org/pods/ColorPicker)
 [![Platform](https://img.shields.io/cocoapods/p/ColorPicker.svg?style=flat)](http://cocoapods.org/pods/ColorPicker)
