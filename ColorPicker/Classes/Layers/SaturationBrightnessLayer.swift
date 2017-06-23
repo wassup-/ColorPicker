@@ -17,7 +17,7 @@ class SaturationBrightnessLayer: CAEAGLLayer {
 		case attributes = 2
 	}
 
-	private let glContext: EAGLContext = EAGLContext(api: .openGLES2)
+	private var glContext: EAGLContext! = EAGLContext(api: .openGLES2)
 	private var frameBuffer: GLuint = 0
 	private var renderBuffer: GLuint = 0
 	private var program: GLuint = 0
@@ -26,11 +26,25 @@ class SaturationBrightnessLayer: CAEAGLLayer {
 		didSet { setNeedsDisplay() }
 	}
 
+	private func makeContextCurrent() {
+		if EAGLContext.current() != glContext {
+			EAGLContext.setCurrent(glContext)
+		}
+	}
+
 	override init() {
 		super.init()
 		commonInit()
 	}
-	
+
+	override init(layer: Any) {
+		super.init(layer: layer)
+		commonInit()
+
+		guard let layer = layer as? SaturationBrightnessLayer else { return }
+		hue = layer.hue
+	}
+
 	required init?(coder aDecoder: NSCoder) {
 		super.init(coder: aDecoder)
 		commonInit()
@@ -39,7 +53,8 @@ class SaturationBrightnessLayer: CAEAGLLayer {
 	private func commonInit() {
 		isOpaque = true
 
-		EAGLContext.setCurrent(glContext)
+		makeContextCurrent()
+
 		glGenRenderbuffers(1, &renderBuffer)
 		glBindRenderbuffer(GLenum(GL_RENDERBUFFER), renderBuffer)
 		glContext.renderbufferStorage(Int(GL_RENDERBUFFER), from: self)
@@ -61,11 +76,13 @@ class SaturationBrightnessLayer: CAEAGLLayer {
 		if EAGLContext.current() == glContext {
 			EAGLContext.setCurrent(nil)
 		}
+
+		// IMPORTANT: glContext needs to be 'released' manually
+		glContext = nil
 	}
 
 	override func layoutSublayers() {
 		super.layoutSublayers()
-
 		glBindRenderbuffer(GLenum(GL_RENDERBUFFER), renderBuffer)
 		glContext.renderbufferStorage(Int(GL_RENDERBUFFER), from: self)
 	}
@@ -151,7 +168,7 @@ class SaturationBrightnessLayer: CAEAGLLayer {
 	override func display() {
 		super.display()
 
-		EAGLContext.setCurrent(glContext)
+		makeContextCurrent()
 
 		let squareVertices: [GLfloat] = [0, 0,
 		                                 1, 0,
@@ -162,7 +179,6 @@ class SaturationBrightnessLayer: CAEAGLLayer {
 		glViewport(0, 0, GLsizei(bounds.width), GLsizei(bounds.height))
 
 		glUseProgram(program)
-
 
 		glUniform1f(glGetUniformLocation(program, "hue"), GLfloat(hue))
 		glVertexAttribPointer(Attribute.vertex.rawValue,
@@ -175,4 +191,5 @@ class SaturationBrightnessLayer: CAEAGLLayer {
 		glBindRenderbuffer(GLenum(GL_RENDERBUFFER), renderBuffer)
 		glContext.presentRenderbuffer(Int(GL_RENDERBUFFER))
 	}
+	
 }
